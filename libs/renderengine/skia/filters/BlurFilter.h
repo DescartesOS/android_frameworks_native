@@ -87,6 +87,7 @@ private:
 
     // PenguinOS Liquid Glass: rounded blur regions drawn as a lens with a lit rim
     const sk_sp<SkRuntimeEffect> mLiquidGlassEffect;
+    const sk_sp<SkRuntimeEffect> mCosGlassEffect;
     bool mLiquidGlass = false;
 };
 
