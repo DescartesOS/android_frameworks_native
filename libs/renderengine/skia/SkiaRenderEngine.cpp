@@ -1193,7 +1193,7 @@ void SkiaRenderEngine::drawLayersInternal(
                                          const SkRect& blurredRect, const BlurRegion& region) {
                                 mBlurFilter->drawBlurRegion(canvas, getBlurRRect(region),
                                                             region.blurRadius, 1.0f, region.alpha,
-                                                            blurRect, temporaryBlurredImage,
+                                                            blurredRect, temporaryBlurredImage,
                                                             blurInput, region.material);
                             };
 
