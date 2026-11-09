@@ -16,8 +16,8 @@
 
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 #include "BlurFilter.h"
-#include <SkBlendMode.h>
 #include <cmath>
+#include <SkBlendMode.h>
 #include <SkM44.h>
 #include <SkCanvas.h>
 #include <SkPaint.h>
@@ -363,7 +363,7 @@ static bool liquidGlassEnabledFor(const std::string& namePlusId) {
     return false;
 }
 
-// A Liquid Glass value overridden live from debug.lg.sf.<name>, for matching the material by eye.
+// A Liquid Glass value overridden live from debug.evolution.lg.sf.<name>, for matching the material by eye.
 static float tune(const char* name, float fallback) {
     static std::mutex lock;
     static std::map<std::string, std::unique_ptr<CachedProperty>> props;
@@ -371,7 +371,7 @@ static float tune(const char* name, float fallback) {
     auto& prop = props[name];
     if (prop == nullptr) {
         prop = std::make_unique<CachedProperty>(
-                strdup((std::string("debug.lg.sf.") + name).c_str()));
+                strdup((std::string("debug.evolution.lg.sf.") + name).c_str()));
     }
     const std::string& value = prop->get();
     if (value.empty()) return fallback;
@@ -397,7 +397,7 @@ struct GlassLens {
 };
 
 // How far glass rims refract, from Penguin Laboratory's Refraction slider: 0-100% of the
-// strongest bend, 60% by default. debug.lg.sf.lens overrides it while tuning.
+// strongest bend, 60% by default. debug.evolution.lg.sf.lens overrides it while tuning.
 static float refractionStrength() {
     static CachedProperty percent("persist.sys.penguin.liquid_glass_refraction");
     const std::string& value = percent.get();
@@ -563,7 +563,13 @@ static float cosRimRatio(float w, float h, float radius) {
     const float corner = std::min(radius, shortSide / 2);
     const float side = (w * h - shortSide * shortSide) / (2 * shortSide);
     float pos = w >= h ? side + h / 2 : h / 2 - side;
-    if (!(w == h && radius >= h / 2)) pos -= corner / 2;
+    // A circle skips the corner offset. Ease it in as the shape stretches instead of applying it
+    // whole a pixel off square, or a moving circle's flare jumps as its bounds round.
+    const float longSide = std::max(w, h);
+    const float stretch = radius >= shortSide / 2
+            ? std::clamp((longSide - shortSide) / (shortSide * 0.25f), 0.0f, 1.0f)
+            : 1.0f;
+    pos -= corner / 2 * stretch;
     return pos * 0.5f / (w + h) + 0.5f;
 }
 
